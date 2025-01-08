@@ -1,11 +1,13 @@
 use super::OkxLevel;
 use crate::{
     exchange::okx::trade::de_okx_message_arg_as_subscription_id,
-    subscription::book::{OrderBook, OrderBookSide},
+    books::{OrderBook, OrderBookSide},
     Identifier,
 };
-use barter_integration::model::{Side, SubscriptionId};
+use barter_integration::subscription::SubscriptionId;
+use barter_instrument::Side;
 use chrono::{DateTime, Utc};
+use rust_decimal::prelude::ToPrimitive;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Copy, Clone, Deserialize, Serialize, Eq, PartialEq)]
@@ -34,11 +36,7 @@ pub struct OkxOrderBookDataL2 {
 
 impl From<OkxOrderBookDataL2> for OrderBook {
     fn from(snapshot: OkxOrderBookDataL2) -> Self {
-        Self {
-            last_update_time: Utc::now(),
-            bids: OrderBookSide::new(Side::Buy, snapshot.bids),
-            asks: OrderBookSide::new(Side::Sell, snapshot.asks),
-        }
+        OrderBook::new(snapshot.seq_id as u64, Some(snapshot.time), snapshot.bids, snapshot.asks)
     }
 }
 
@@ -64,6 +62,8 @@ mod tests {
     use super::*;
 
     mod de {
+        use rust_decimal_macros::dec;
+
         use super::*;
 
         #[test]
@@ -100,12 +100,12 @@ mod tests {
                     data: vec![OkxOrderBookDataL2 {
                         time: DateTime::<Utc>::from_timestamp_millis(1597026383085).unwrap(),
                         asks: vec![OkxLevel {
-                            price: 8476.98,
-                            amount: 415.0,
+                            price: dec!(8476.98),
+                            amount: dec!(415.0),
                         }],
                         bids: vec![OkxLevel {
-                            price: 8476.97,
-                            amount: 256.0,
+                            price: dec!(8476.97),
+                            amount: dec!(256.0),
                         }],
                         seq_id: 123456,
                         checksum: 123,

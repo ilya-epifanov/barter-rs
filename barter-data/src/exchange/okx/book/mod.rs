@@ -1,4 +1,5 @@
-use crate::subscription::book::Level;
+use crate::books::Level;
+use rust_decimal::Decimal;
 use serde::{
     de::{SeqAccess, Visitor},
     Deserialize, Deserializer, Serialize,
@@ -25,8 +26,10 @@ pub mod l2;
 /// See docs: <https://www.okx.com/docs-v5/en/#order-book-trading-market-data-ws-order-book-channel>
 #[derive(Clone, Copy, PartialEq, PartialOrd, Debug, Serialize)]
 pub struct OkxLevel {
-    pub price: f64,
-    pub amount: f64,
+    #[serde(with = "rust_decimal::serde::str")]
+    pub price: Decimal,
+    #[serde(with = "rust_decimal::serde::str")]
+    pub amount: Decimal,
 }
 
 impl<'de> Deserialize<'de> for OkxLevel {
@@ -47,12 +50,12 @@ impl<'de> Deserialize<'de> for OkxLevel {
             where
                 V: SeqAccess<'de>,
             {
-                let price: f64 = seq
+                let price: Decimal = seq
                     .next_element::<&str>()?
                     .ok_or_else(|| serde::de::Error::invalid_length(0, &self))?
                     .parse()
                     .map_err(serde::de::Error::custom)?;
-                let amount: f64 = seq
+                let amount: Decimal = seq
                     .next_element::<&str>()?
                     .ok_or_else(|| serde::de::Error::invalid_length(1, &self))?
                     .parse()
@@ -83,6 +86,8 @@ mod tests {
     use super::*;
 
     mod de {
+        use rust_decimal_macros::dec;
+
         use super::*;
 
         #[test]
@@ -91,8 +96,8 @@ mod tests {
             assert_eq!(
                 serde_json::from_str::<OkxLevel>(input).unwrap(),
                 OkxLevel {
-                    price: 4.00000200,
-                    amount: 12.0
+                    price: dec!(4.00000200),
+                    amount: dec!(12.0)
                 },
             )
         }

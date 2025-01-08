@@ -33,7 +33,7 @@ pub mod subscription;
 pub mod trade;
 
 /// Futures types for [`Okx`].
-pub mod futures;
+// pub mod futures;
 
 /// OrderBook type for [`Okx`].
 pub mod book;

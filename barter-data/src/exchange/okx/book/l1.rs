@@ -3,7 +3,7 @@ use crate::{
     exchange::okx::trade::de_okx_message_arg_as_subscription_id, subscription::book::OrderBookL1,
     Identifier,
 };
-use barter_integration::model::SubscriptionId;
+use barter_integration::subscription::SubscriptionId;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
@@ -38,11 +38,7 @@ impl Identifier<Option<SubscriptionId>> for OkxFuturesOrderBookL1 {
 
 impl From<OkxOrderBookDataL1> for OrderBookL1 {
     fn from(data: OkxOrderBookDataL1) -> Self {
-        Self {
-            last_update_time: Utc::now(),
-            best_bid: data.bids[0].into(),
-            best_ask: data.asks[0].into(),
-        }
+        Self::new(data.time, Some(data.bids[0].into()), Some(data.asks[0].into()))
     }
 }
 
@@ -51,6 +47,8 @@ mod tests {
     use super::*;
 
     mod de {
+        use rust_decimal_macros::dec;
+
         use super::*;
 
         #[test]
@@ -87,12 +85,12 @@ mod tests {
                     data: vec![OkxOrderBookDataL1 {
                         time: DateTime::<Utc>::from_timestamp_millis(1670324386802).unwrap(),
                         asks: vec![OkxLevel {
-                            price: 111.06,
-                            amount: 55154.0,
+                            price: dec!(111.06),
+                            amount: dec!(55154.0),
                         }],
                         bids: vec![OkxLevel {
-                            price: 111.05,
-                            amount: 57745.0,
+                            price: dec!(111.05),
+                            amount: dec!(57745.0),
                         }],
                         seq_id: 363996337,
                     }]
